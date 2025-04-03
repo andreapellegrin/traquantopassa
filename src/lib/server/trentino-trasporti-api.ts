@@ -48,7 +48,7 @@ export interface ApiStopTime {
 }
 
 export async function getStops() {
-	const path = '/gtlservice/stops?type=U';
+	const path = '/gtlservice/stops?type=E';
 
 	logger.info('Fetching stops from API');
 	const start = performance.now();
@@ -64,14 +64,16 @@ export async function getStops() {
 
 	logger.info(`Fetched stops in ${elapsed(start)} ms`);
 
-	// Keep only stops in Trento and exclude "funivia" which has a different stop code pattern
-	data = data.filter(stop => stop.town == 'Trento' && /^[0-9]+[a-z-]*$/.test(stop.stopCode));
+	// Keep only stops in B101 line (Fassa and Fiemme Valleys)
+	data = data.filter(stop =>
+		stop.routes?.some(route => route.routeId === 1)
+	);
 
 	return data;
 }
 
 export async function getRoutes() {
-	const path = '/gtlservice/routes?areas=23';
+	const path = '/gtlservice/routes?areas=1';
 
 	logger.info('Fetching routes from API');
 	const start = performance.now();
@@ -83,15 +85,18 @@ export async function getRoutes() {
 		signal: AbortSignal.timeout(10 * 1000)
 	});
 
-	const data: ApiRoute[] = await res.json();
+	let data: ApiRoute[] = await res.json();
 
 	logger.info(`Fetched routes in ${elapsed(start)} ms`);
+
+	// Keep only route B101
+	data = data.filter(route => route.routeId === 1);
 
 	return data;
 }
 
 export async function getTrips(stopId: number, limit: number) {
-	const path = `/gtlservice/trips_new?limit=${limit}&stopId=${stopId}&type=U`;
+	const path = `/gtlservice/trips_new?limit=${limit}&stopId=${stopId}&type=E`;
 
 	logger.info(`Fetching trips for ${stopId}`);
 	const start = performance.now();

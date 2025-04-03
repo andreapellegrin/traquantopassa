@@ -22,24 +22,14 @@ export async function getStopGroups() {
 	// Fetch stops from the API
 	const apiStops = await api.getStops();
 
-	// Group stops by name
+	// Group stops
 	for (const apiStop of apiStops) {
-		// Find existing stop group with the same stop code
-		const existing = stopGroups.find(sg =>
-			sg.code === apiStop.stopCode.replace(/[^0-9]/g, '')
-		);
-		if (existing) {
-			existing.stops.push(createStop(apiStop));
-			apiStop.routes.forEach(r => existing.routeIds.add(r.routeId));
-			existing.coordinates = calculateCoordinates(existing.stops);
-		} else {
-			const stopGroup = createStopGroup(apiStop);
-			const stop = createStop(apiStop);
-			stopGroup.stops.push(stop);
-			apiStop.routes.forEach(r => stopGroup.routeIds.add(r.routeId));
-			stopGroup.coordinates = calculateCoordinates(stopGroup.stops);
-			stopGroups.push(stopGroup);
-		}
+		const stopGroup = createStopGroup(apiStop);
+		const stop = createStop(apiStop);
+		stopGroup.stops.push(stop);
+		apiStop.routes.forEach(r => stopGroup.routeIds.add(r.routeId));
+		stopGroup.coordinates = calculateCoordinates(stopGroup.stops);
+		stopGroups.push(stopGroup);
 	}
 
 	// Sort by name
